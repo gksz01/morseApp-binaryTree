@@ -3,61 +3,79 @@ package MorseTree;
 import MorseNode.MorseNode;
 
 public class MorseTree {
-    private final MorseNode root;
+    private MorseNode root;
 
     public MorseTree() {
-        root = new MorseNode('*'); // root doesn't represent a letter
+        root = new MorseNode();
     }
 
-    public MorseNode getRoot() {
-        return root;
+    public MorseNode getRoot() { return root; }
+
+    // Insert: morse string then character stored uppercase
+    public void insert(String morse, char ch) {
+        if (morse == null) throw new IllegalArgumentException("Morse cannot be null");
+        ch = Character.toUpperCase(ch);
+        root = insertRec(root, morse.trim(), 0, ch);
     }
 
-
-    public void insert(char letter, String code) {
-        insertRecursive(root, letter, code, 0);
-    }
-
-    private void insertRecursive(MorseNode node, char letter, String code, int index) {
-        if (index == code.length()) {
-            node.value = letter;
-            return;
+    private MorseNode insertRec(MorseNode node, String morse, int idx, char ch) {
+        if (node == null) node = new MorseNode();
+        if (idx == morse.length()) {
+            node.value = ch;
+            return node;
         }
-        char c = code.charAt(index);
-        if (c == '.') {
-            if (node.leftNode == null) node.leftNode = new MorseNode('*');
-            insertRecursive(node.leftNode, letter, code, index + 1);
-        } else if (c == '-') {
-            if (node.rightNode == null) node.rightNode = new MorseNode('*');
-            insertRecursive(node.rightNode, letter, code, index + 1);
-        }
+        char c = morse.charAt(idx);
+        if (c == '.') node.leftNode = insertRec(node.leftNode, morse, idx + 1, ch);
+        else if (c == '-') node.rightNode = insertRec(node.rightNode, morse, idx + 1, ch);
+        else throw new IllegalArgumentException("Invalid morse character: " + c);
+        return node;
     }
 
-    public char decode(String code) {
-        return decodeRecursive(root, code, 0);
+    // decode a morse token into a Character (or null if not found)
+    public Character decode(String morse) {
+        if (morse == null) return null;
+        MorseNode n = decodeRec(root, morse.trim(), 0);
+        if (n == null) return null;
+        return n.value == '\0' ? null : n.value;
     }
 
-    private char decodeRecursive(MorseNode node, String code, int index) {
-        if (node == null) return '?';
-        if (index == code.length()) return node.value;
-
-        char c = code.charAt(index);
-        if (c == '.') return decodeRecursive(node.leftNode, code, index + 1);
-        else return decodeRecursive(node.rightNode, code, index + 1);
-    }
-
-    // Recursive search for encoding
-    public String encode(char letter) {
-        return encodeRecursive(root, letter, "");
-    }
-
-    private String encodeRecursive(MorseNode node, char letter, String path) {
+    private MorseNode decodeRec(MorseNode node, String morse, int idx) {
         if (node == null) return null;
-        if (node.value == letter) return path;
+        if (idx == morse.length()) return node;
+        char c = morse.charAt(idx);
+        if (c == '.') return decodeRec(node.leftNode, morse, idx + 1);
+        else if (c == '-') return decodeRec(node.rightNode, morse, idx + 1);
+        else return null;
+    }
 
-        String left = encodeRecursive(node.leftNode, letter, path + ".");
+    // encode char -> morse string by searching tree (recursive). returns null if not found
+    public String encodeChar(char target) {
+        target = Character.toUpperCase(target);
+        return encodeRec(root, target, "");
+    }
+
+    private String encodeRec(MorseNode node, char target, String path) {
+        if (node == null) return null;
+        if (node.value == target) return path;
+        // search left
+        String left = encodeRec(node.leftNode, target, path + ".");
         if (left != null) return left;
+        // then right
+        return encodeRec(node.rightNode, target, path + "-");
+    }
 
-        return encodeRecursive(node.rightNode, letter, path + "-");
+    // compute positions for drawing using inorder to set x, depth for y
+    public void computePositions() {
+        int[] counter = new int[]{0};
+        computePosRec(root, 0, counter);
+    }
+
+    private void computePosRec(MorseNode node, int depth, int[] counter) {
+        if (node == null) return;
+        computePosRec(node.leftNode, depth + 1, counter);
+        node.x = counter[0] * 70 + 60;
+        node.y = depth * 100 + 60;
+        counter[0]++;
+        computePosRec(node.rightNode, depth + 1, counter);
     }
 }

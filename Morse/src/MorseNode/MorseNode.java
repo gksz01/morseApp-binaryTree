@@ -1,13 +1,11 @@
 package MorseNode;
 
 public class MorseNode {
-    public char value;
-    public MorseNode leftNode;   // dot
-    public MorseNode rightNode;  // dash
+    public char value;     // '\0' quando vazio
+    public MorseNode leftNode; // dot
+    public MorseNode rightNode;// dash
+    public double x, y;    // coords para desenhar
 
-    public MorseNode(char value) {
-        this.value = value;
-        this.leftNode = null;
-        this.rightNode = null;
-    }
+    public MorseNode() { this.value = '\0'; }
+    public MorseNode(char v) { this.value = v; }
 }
